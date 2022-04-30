@@ -1,0 +1,19 @@
+---
+- hosts: web
+  become: true
+  become_user: root
+  tasks:
+  - name: create directory for wp-cli
+    file:
+      path: /usr/bin/wp
+      state: directory
+      mode: '0755'
+
+  - name: wp-cli | install
+    get_url:
+      url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+      dest: "/usr/bin/wp/wp-cli"
+#      force: true
+      owner: root
+      group: root
+      mode: 0755

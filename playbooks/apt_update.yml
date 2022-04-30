@@ -1,0 +1,12 @@
+---
+- hosts: web
+  become: true
+  become_user: root
+  tasks:
+    - name:  Debian apt update and upgrade
+      apt: update_cache=yes force_apt_get=yes upgrade=yes cache_valid_time=3600
+
+    - name: Run any available operating system updates
+      apt:
+        update_cache: yes
+        upgrade: dist

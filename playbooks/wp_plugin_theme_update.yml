@@ -1,0 +1,10 @@
+---
+- hosts: web
+  become: true
+  become_user: root
+  tasks:
+  - name: Update all available plugins
+    shell: /usr/bin/wp/wp-cli plugin update --all --allow-root --path="/var/www/html/wordpress"
+
+  - name: Update all available themes
+    shell: /usr/bin/wp/wp-cli theme update --all --allow-root --path="/var/www/html/wordpress"

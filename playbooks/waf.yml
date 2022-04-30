@@ -1,0 +1,71 @@
+---
+- hosts: web
+  become: true
+  become_user: root
+  tasks:
+  - name: Install GIT
+    package: name=git state=present   
+  - name: Install ModSecurity WAF
+    package: name=libapache2-mod-security2 state=present
+ 
+  - name: Rename configuration file
+    command: mv /etc/modsecurity/modsecurity.conf-recommended /etc/modsecurity/modsecurity.conf
+
+  - name: Remove /usr/share/modsecurity-crs
+    file: 
+      path: /usr/share/modsecurity-crs
+      state: absent
+
+  - name: Install modsecurity repo from GIT
+    git:
+      repo: 'https://github.com/SpiderLabs/owasp-modsecurity-crs.git'
+      dest: /usr/share/modsecurity-crs
+
+  - name: Rename example setup file
+    command: mv /usr/share/modsecurity-crs/crs-setup.conf.example /usr/share/modsecurity-crs/crs-setup.conf
+
+  - name: Change ModSecurity detection mode
+    lineinfile:
+      path: /etc/modsecurity/modsecurity.conf
+      regexp: 'SecRuleEngine DetectionOnly'
+      line: SecRuleEngine On
+
+  - name: Enable rules
+    blockinfile:
+      path: /etc/apache2/mods-enabled/security2.conf
+      insertafter: 'SecDataDir /var/cache/modsecurity'
+      block: |
+        IncludeOptional "/usr/share/modsecurity-crs/*.conf 
+        IncludeOptional "/usr/share/modsecurity-crs/rules/*.conf 
+
+
+  - name:  Remove paranoia settings
+    shell: perl -i -p0e 's/#SecAction.*?setvar:tx.paranoia_level=1"//s' /usr/share/modsecurity-crs/crs-setup.conf
+
+  - shell: perl -i -p0e 's/#SecAction.*?setvar:tx.executing_paranoia_level=1"//s' /usr/share/modsecurity-crs/crs-setup.conf
+
+  - name: Make paranoia level 2
+    blockinfile:
+      path: /usr/share/modsecurity-crs/crs-setup.conf
+      block: |
+        SecAction \
+          "id:900000,\
+           phase:1,\
+           nolog,\
+           pass,\
+           t:none,\
+           setvar:tx.paranoia_level=2"
+
+        SecAction \
+          "id:900001,\
+           phase:1,\
+           nolog,\
+           pass,\
+           t:none,\
+           setvar:tx.executing_paranoia_level=2"
+
+ 
+  - name: Restart apache
+    systemd:
+      name: apache2
+      state: restarted

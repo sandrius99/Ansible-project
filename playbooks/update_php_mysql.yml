@@ -1,0 +1,61 @@
+
+---
+- hosts: web
+  become: true
+  become_user: root
+  tasks:
+  - name: Install needed packages for php8.0
+    apt:
+      name: software-properties-common       
+      state: present
+  - ansible.builtin.apt_repository:
+      repo: ppa:ondrej/php
+
+  - name: apt update
+    apt: update_cache=yes force_apt_get=yes 
+  
+  - name: Install php8.0 and additional php packages
+    apt:      
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - php8.0
+      - php8.0-bcmath
+      - php8.0-bz2
+      - php8.0-intl
+      - php8.0-gd
+      - php8.0-mbstring
+      - php8.0-mysql
+      - php8.0-zip
+      - php8.0-common
+
+  - name: Try to specify preference for mysql
+    shell: echo mysql-apt-config mysql-apt-config/select-server select mysql-8.0 | debconf-set-selections
+
+  - name: Add mysql apt-config debian
+    apt: deb=https://dev.mysql.com/get/mysql-apt-config_0.8.16-1_all.deb update-cache=yes force_apt_get=yes
+   
+  - apt: update_cache=yes force_apt_get=yes
+
+  - name: Install additional mysql8 package
+    apt: name=mysql-community-server  state=present
+   
+  - name: Upgrade mysql5.7 to mysql8.0
+    apt: update_cache=yes force_apt_get=yes upgrade=yes 
+ 
+  - name: Configure mysql authentication
+    shell: echo "[mysqld]" >> /etc/mysql/my.cnf
+  - lineinfile:
+      path: /etc/mysql/my.cnf
+      line: default_authentication_plugin=mysql_native_password    
+
+  - name: Setup php8.0 for apache
+    shell: a2enmod php8.0
+ 
+  - name: Remove ph7 config files from apache folder
+    shell: rm /etc/apache2/mods-enabled/php7*
+    ignore_errors: yes
+
+  - name: Restart apache
+    service: name=apache2 state=restarted
+    

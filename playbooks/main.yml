@@ -1,0 +1,13 @@
+---
+- import_playbook: apt_update.yml
+- import_playbook: install_apache_php.yml
+- import_playbook: install_mysql.yml
+- import_playbook: update_php_mysql.yml
+- import_playbook: wordpress.yml
+- import_playbook: wp-cli.yml
+- import_playbook: wp_plugin_theme_update.yml
+- import_playbook: change_admin_password_disable_users.yml
+- import_playbook: cron_permissions.yml
+- import_playbook: logcheck.yml
+- import_playbook: waf.yml
+- import_playbook: waf_report.yml

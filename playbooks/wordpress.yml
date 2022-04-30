@@ -1,0 +1,29 @@
+---
+- name: Install WordPress
+  hosts: web
+  become: true
+  become_user: root
+  tasks:
+    - name: Download and Extract WorPress
+      unarchive:
+        src: https://wordpress.org/latest.tar.gz
+        dest: /tmp
+        remote_src: yes
+    
+    - name: Remove folder 'wp-content' from downloaded Wordpress
+      file: path="/tmp/wordpress/wp-content" state=absent
+    
+    - name: Remove file .htaccess from dowloaded Wordpress
+      file: path="/tmp/wordpress/.htaccess" state=absent
+
+    - name: Remove folder 'wp-admin' from current wordpress
+      file: path="/var/www/html/wordpress/wp-admin" state=absent	
+  
+    - name: Remove foler 'wp-includes' from current wordpress
+      file: path="/var/www/html/wordpress/wp-includes" state=absent
+ 
+    - name: Move files to var/www/html/wordpress
+      shell: mv  /tmp/wordpress/* /var/www/html/wordpress	
+  
+    - name: Restart apache2
+      service: name=apache2 state=restarted

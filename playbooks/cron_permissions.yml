@@ -1,0 +1,17 @@
+---
+- hosts: web
+  become: true
+  become_user: root
+  tasks:
+  - name: Disable cron service
+    service: name=cron state=stopped
+
+  - name: Disable permissions/groups access for shadow, password, www, logs
+
+   
+    file:
+      path: "{{item}}"
+      mode: 0700
+    loop:
+      - /var/log
+      - /var/www    

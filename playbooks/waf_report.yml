@@ -1,0 +1,20 @@
+--- 
+- hosts: web
+  become: true
+  become_user: root
+  tasks:
+    - name: Copy script for report
+      copy:
+        src: ~/ansible/create_report.sh
+        dest: /root/create_report.sh
+        mode: '0644'  
+
+    - name: Install anacron
+      apt: name=anacron state=present
+
+    - name: Add job to anacron tab
+      lineinfile:
+        path: /etc/anacrontab
+        line: 1 1    cron.daily /bin/sh /root/create_report.sh
+
+

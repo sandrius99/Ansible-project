@@ -1,0 +1,34 @@
+---
+- hosts: web
+  become: true
+  become_user: root
+  tasks:
+    - name: 'Install logcheck packages'
+      apt:
+        pkg:
+          - 'logcheck'
+          - 'logcheck-database'
+          - 'fetchmail'
+   
+    - name: Edit logcheck cron
+      lineinfile:
+        path: /etc/cron.d/logcheck
+        regexp: 'MAILTO='
+        line: MAILTO=email@yahoo.com
+
+    - lineinfile:
+        path: /etc/cron.d/logcheck
+        regexp: '@reboot'
+        line: '@daily         logcheck    if [ -x /usr/sbin/logcheck ]; then nice -n10 /usr/sbin/logcheck -R; fi'
+
+    - lineinfile:
+        path: /etc/cron.d/logcheck
+        regexp: '2 * * * *'
+        line: '0 */12 * * *       logcheck    if [ -x /usr/sbin/logcheck ]; then nice -n10 /usr/sbin/logcheck; fi'
+
+
+    - name: Edit logcheck conf file
+      lineinfile:
+        path: /etc/logcheck/logcheck.conf
+        regexp: 'SENDMAILTO='
+        line: SENDMAILTO="email@yahoo.com"
